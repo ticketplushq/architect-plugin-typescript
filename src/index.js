@@ -30,8 +30,30 @@ module.exports = {
     }
   },
   deploy: {
-    // TODO: add support for custom TS check commands (e.g. `tsc -p .`)?
-    start: compileProject
+    start: async function (params)  {
+      let { arc, inventory } = params
+      let { cwd } = inventory.inv._project
+      let buildPath = '.build'
+      let force = true
+      if (arc.typescript) {
+        let settings = Object.fromEntries(arc.typescript)
+        if (settings.build && typeof settings.build === 'string') {
+          buildPath = settings.build
+        }
+        if (typeof settings.force === 'boolean') {
+          force = settings.force
+        }
+      }
+
+      // Prevent TypeScript recompilation upon each sandbox start during tests
+      let build = join(cwd, buildPath)
+      if (existsSync(build) && !force) {
+        console.log(`Already compiled, skipping`)
+        return
+      }
+
+      await compileProject(params)
+    },
   },
   sandbox: {
     start: async function (params)  {
