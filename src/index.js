@@ -1,5 +1,3 @@
-let { join } = require('path')
-let { existsSync } = require('fs')
 let {
   compileProject,
   compileHandler,
@@ -30,56 +28,10 @@ module.exports = {
     }
   },
   deploy: {
-    start: async function (params)  {
-      let { arc, inventory } = params
-      let { cwd } = inventory.inv._project
-      let buildPath = '.build'
-      let force = true
-      if (arc.typescript) {
-        let settings = Object.fromEntries(arc.typescript)
-        if (settings.build && typeof settings.build === 'string') {
-          buildPath = settings.build
-        }
-        if (typeof settings.force === 'boolean') {
-          force = settings.force
-        }
-      }
-
-      // Prevent TypeScript recompilation upon each sandbox start during tests
-      let build = join(cwd, buildPath)
-      if (existsSync(build) && !force) {
-        console.log(`Already compiled, skipping`)
-        return
-      }
-
-      await compileProject(params)
-    },
+    start: compileProject,
   },
   sandbox: {
-    start: async function (params)  {
-      let { arc, inventory } = params
-      let { cwd } = inventory.inv._project
-      let buildPath = '.build'
-      let force = true
-      if (arc.typescript) {
-        let settings = Object.fromEntries(arc.typescript)
-        if (settings.build && typeof settings.build === 'string') {
-          buildPath = settings.build
-        }
-        if (typeof settings.force === 'boolean') {
-          force = settings.force
-        }
-      }
-
-      // Prevent TypeScript recompilation upon each sandbox start during tests
-      let build = join(cwd, buildPath)
-      if (existsSync(build) && !force) {
-        console.log(`Already compiled, skipping`)
-        return
-      }
-
-      await compileProject(params)
-    },
+    start: compileProject,
     watcher: async function (params) {
       let { filename, /* event, */ inventory } = params
       if (filename.endsWith('.ts') || filename.endsWith('.tsx')) {
@@ -103,7 +55,7 @@ module.exports = {
         let globalTsConfig = getTsConfig(cwd)
         console.log(`Recompiling handler: @${pragma} ${name}`)
         try {
-          await compileHandler({ inventory, lambda, globalTsConfig })
+          await compileHandler({ inventory, lambdas: [ lambda ], globalTsConfig })
           console.log(`Compiled in ${(Date.now() - start) / 1000}s\n`)
         }
         catch (err) {
