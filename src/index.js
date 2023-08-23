@@ -56,7 +56,7 @@ module.exports = {
         }
 
         // Second pass filter by Lambda dir
-        let lambda = Object.values(lambdasBySrcDir).find(({ src }) => filename.startsWith(src))
+        let lambda = Object.values(lambdasBySrcDir).find(({ src }) => filename.startsWith(src + '/'))
 
         if (!lambda) { return }
 
